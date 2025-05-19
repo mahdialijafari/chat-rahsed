@@ -36,7 +36,7 @@ app.use((req,res,next)=>{
 app.use('/api/auth',authRouter)
 app.use('/api/user',userRouter)
 app.use('/api/upload',uploadRouter)
-app.use('*',(req,res,next)=>{
+app.use((req,res,next)=>{
     return next(new HandleERROR('route not found',404))
 })
 app.use(catchError)

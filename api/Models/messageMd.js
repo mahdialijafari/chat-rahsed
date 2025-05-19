@@ -29,5 +29,5 @@ const messageSchema = new mongoose.Schema({
     ref: "User",
   },
 });
-const Massage = mongoose.model("Massage", messageSchema);
-export default Massage;
+const Message = mongoose.model("Message", messageSchema);
+export default Message;

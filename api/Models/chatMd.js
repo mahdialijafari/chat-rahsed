@@ -1,10 +1,22 @@
 import mongoose from "mongoose";
 
+const removeSchema=new mongoose.Schema({
+  userId:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref:'User'
+  },
+  removedAt:{
+    type:Date,
+    default:Date.now
+  }
+})
+
 const chatSchema = new mongoose.Schema({
+  chatName: {
+    type: String,
+  },
   name: {
     type: String,
-    required: [true, "name is required"],
-    unique: [true, "username is already taken"],
   },
   type: {
     type: String,
@@ -33,6 +45,18 @@ const chatSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
-});
+  removeddMember:{
+    type: [removeSchema],
+    default:[]
+  }, messages:{
+    type: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Message",
+      },
+    ],
+    default: [],
+  }
+},{timestamps:true});
 const Chat = mongoose.model("Chat", chatSchema);
 export default Chat;

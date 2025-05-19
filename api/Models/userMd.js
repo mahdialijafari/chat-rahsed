@@ -16,6 +16,12 @@ const userSchema = new mongoose.Schema({
   bio: {
     type: String,
   },
+  chatList:{
+    type:[{
+      type: mongoose.Schema.Types.ObjectId,
+      ref:'Chat'
+    }]
+  }
 });
 const User = mongoose.model("User", userSchema);
 export default User;
