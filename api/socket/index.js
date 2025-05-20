@@ -6,12 +6,12 @@ const server=createServre(app)
 const io = new Server(server,{
     cors:'*'
 })
-export const onlineUser={}
+const onlineUser={}
 
 const getSocketId=(item)=>{
     if(typeof item=='string'){
         return onlineUser[item]
-    }else{
+    }else {
         const socketIds=[]
         item?.map(e=>{
             if(onlineUser[e]){
@@ -20,6 +20,7 @@ const getSocketId=(item)=>{
         })
         return socketIds
     }
+    return null
 }
 
 io.on('connection',(socket)=>{
@@ -29,5 +30,10 @@ io.on('connection',(socket)=>{
     }
     io.emit('getOnlineUser',Object.keys(onlineUser))
 
-    socket.on('disconnect')
+    socket.on('disconnect',()=>{
+        delete onlineUser[userId]
+        io.emit('getOnlineUser',Object.keys(onlineUser))
+    })
 })
+
+export {getSocketId,server,io}

@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
-import app,{__dirname} from './app.js'
+import {__dirname} from './app.js'
 import dotenv from 'dotenv'
+import { server } from './Socket/index.js'
 
 dotenv.config({path:`${__dirname}/config.env`})
 mongoose.connect(process.env.DATA_BASE).then(()=>{
@@ -9,6 +10,6 @@ mongoose.connect(process.env.DATA_BASE).then(()=>{
     console.log(err)
 })
 
-app.listen(process.env.PORT,()=>{
+server.listen(process.env.PORT,()=>{
     console.log('server is running')
 })

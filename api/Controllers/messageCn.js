@@ -1,7 +1,7 @@
 import Message from "../Models/messageMd";
 import Chat from "../Models/chatMd";
 import { catchAsync, HandleERROR } from "vanta-api";
-import {io, getSocketId} from '../socket/index.js'
+import {io, getSocketId} from '../Socket/index.js'
 
 export const createMessage=catchAsync(async(req,res,next)=>{
     const {content,chatId,type}=req.body

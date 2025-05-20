@@ -2,6 +2,8 @@
 import { catchAsync, HandleERROR } from "vanta-api";
 import Chat from "../Models/chatMd.js";
 import User from "../Models/userMd.js";
+import { io,getSocketId } from "../Socket/index.js";
+import { Types } from "mongoose";
 
 export const createPrivate = catchAsync(async (req, res, next) => {
   const {userId} = req.body;
@@ -34,6 +36,10 @@ export const createPrivate = catchAsync(async (req, res, next) => {
     userChats.chatList.push(newChat._id)
     await userChats.save()
     await User.findByIdAndUpdate(req.userId,{$push:{chatList:newChat._id}},{new:true})
+    const socketId=getSocketId(req.userId)
+    if(socketId){
+      io.to(socketId).emit('newChat',newChat)
+    }
     res.status(200).json({
       success: true,
       data: {
@@ -70,3 +76,153 @@ export const createChannelOrGroup = catchAsync(async (req, res, next) => {
 });
 
 
+export const getMyChats=catchAsync(async(req,res,next)=>{
+  const userChats=await User.aggregate([
+    {
+      $match:{
+        _id:new Types.ObjectId(req.userId)
+      }
+    },
+    {
+      $lookup:{
+        from:'chats',
+        localField:'chatList',
+        foreignField:'_id',
+        as:'chats'
+      }
+    }
+  ])
+  const result=userChats[0] || {chatList:[]}
+  return res.status(200).json({
+    success:true,
+    data:{
+      chats:result.chatList
+    }
+  })
+})
+
+export const addMember=catchAsync(async(req,res,next)=>{
+  const {chatId=null,userId=null}=req.body
+  if(!chatId || !userId){
+    return next(new HandleERROR('chat ID and user ID is required',400))
+  }
+  const chat=await Chat.findById(chatId)
+  if(!chat){
+    return next(new HandleERROR('chat not found',404))
+  }
+  if(chat.type=='private'){
+    return next(new HandleERROR('private chat cannot add member',400))
+  }
+  if(!chat.admins.includes(req.userId)){
+    return next(new HandleERROR('you are not admin of this chat',403))
+  }
+  if(chat.members.includes(userId)){
+    return next(new HandleERROR('user is already a member',400))
+  }
+  chat.members.push(userId)
+  await chat.save()
+  const socketId=getSocketId(userId)
+    if(socketId){
+      io.to(socketId).emit('newChat',chat)
+    }
+  return res.status(200).json({
+    success:true,
+    data:{
+      chat
+    }
+  })
+})
+
+export const addAdmin=catchAsync(async(req,res,next)=>{
+  const {chatId=null,userId=null}=req.body
+  if(!chatId || !userId){
+    return next(new HandleERROR('chat ID and user ID is required',400))
+  }
+  const chat=await Chat.findById(chatId)
+  if(!chat){
+    return next(new HandleERROR('chat not found',404))
+  }
+  if(chat.type=='private'){
+    return next(new HandleERROR('private chat cannot add member',400))
+  }
+  if(chat.owner != req.userId){
+    return next(new HandleERROR('you are not admin of this chat',403))
+  }
+  if(!chat.members.includes(userId)){
+    return next(new HandleERROR('user was not a member',400))
+  }
+  chat.admins.push(userId)
+  await chat.save()
+  return res.status(200).json({
+    success:true,
+    data:{
+      chat
+    }
+  })
+})
+
+export const removeAdmin=catchAsync(async(req,res,next)=>{
+  const {chatId=null,userId=null}=req.body
+  if(!chatId || !userId){
+    return next(new HandleERROR('chat ID and user ID is required',400))
+  }
+  const chat=await Chat.findById(chatId)
+  if(!chat){
+    return next(new HandleERROR('chat not found',404))
+  }
+  if(chat.type=='private'){
+    return next(new HandleERROR('private chat cannot add member',400))
+  }
+  if(chat.owner != req.userId){
+    return next(new HandleERROR('you are not admin of this chat',403))
+  }
+  if(!chat.members.includes(userId)){
+    return next(new HandleERROR('user was not a member',400))
+  }
+  const newAdmins=chat.admins.filter(admin=>admin!==userId)
+  chat.admins=newAdmins
+  const newChat=await chat.save()
+  const socketId=getSocketId(userId)
+    if(socketId){
+      io.to(socketId).emit('adminRemoved',chat)
+    }
+  return res.status(200).json({
+    success:true,
+    data:{
+      newChat
+    }
+  })
+})
+
+export const removeMember=catchAsync(async(req,res,next)=>{
+  const {chatId=null,userId=null}=req.body
+  if(!chatId || !userId){
+    return next(new HandleERROR('chat ID and user ID is required',400))
+  }
+  const chat=await Chat.findById(chatId)
+  if(!chat){
+    return next(new HandleERROR('chat not found',404))
+  }
+  if(chat.type=='private'){
+    return next(new HandleERROR('private chat cannot add member',400))
+  }
+  if(chat.owner != req.userId && !chat.admins.includes(req.userId)){
+    return next(new HandleERROR('you are not admin of this chat',403))
+  }
+  if(!chat.members.includes(userId)){
+    return next(new HandleERROR('user was not a member',400))
+  }
+  const newMember=chat.members.filter(member=>member!==userId)
+  chat.member=newMember
+  const newChat=await chat.save()
+  const socketId=getSocketId(userId)
+    if(socketId){
+      io.to(socketId).emit('memberRemoved',chat)
+    }
+  return res.status(200).json({
+    success:true,
+    data:{
+      newChat
+    }
+  })
+})
