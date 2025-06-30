@@ -9,5 +9,7 @@ export const securityConfig = {
     user: { maxLimit: 100, allowedPopulate: ["*"] },
     admin: { maxLimit: 1000, allowedPopulate: ["*"] },
     superAdmin: { maxLimit: 1000, allowedPopulate: ["*"] }
-  }
+  },
+  // Aggregation safeguards
+  maxPipelineStages: 20
 };

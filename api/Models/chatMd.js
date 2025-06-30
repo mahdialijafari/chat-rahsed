@@ -48,14 +48,10 @@ const chatSchema = new mongoose.Schema({
   removedMember:{
     type: [removeSchema],
     default:[]
-  }, messages:{
-    type: [
-      {
+  }, 
+  messages:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Message",
-      },
-    ],
-    default: [],
   }
 },{timestamps:true});
 const Chat = mongoose.model("Chat", chatSchema);
