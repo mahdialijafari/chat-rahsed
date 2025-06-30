@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema({
-  chatRef: {
+  chatId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: "Chat",
   },
   type: {
     type: String,
@@ -24,7 +24,7 @@ const messageSchema = new mongoose.Schema({
     type: [string],
     required: [true, "content is required"],
   },
-  senderRef: {
+  senderId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
