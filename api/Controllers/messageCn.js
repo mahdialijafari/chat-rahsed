@@ -58,7 +58,42 @@ export const getMessage=catchAsync(async(req,res,next)=>{
     return res.status(200).json(data)
 })
 
-export const updateMesseage=catchAsync(async(req,res,next)=>{
-    const {chatId}=req.body
-    
+export const updateMesseages=catchAsync(async(req,res,next)=>{
+    const {messageId}=req.params
+    const {content}=req.body
+    const message=await Message.findById(messageId).populate('chatId')
+
+    if(!message){
+        return next(new HandleERROR('message not found',404))
+    }
+    if(message.senderId.toString()!==req.userId){
+        return next(new HandleERROR('you are not authorized to update this message'))
+    }
+    message.content=content
+    await message.save()
+    let members=message.chatId.members
+    const socketIds=getSocketId(members)
+    socketIds.forEach((socketId) => {
+        io.to(socketId).emit('update_message',message)
+    });
+
+    return res.status(200).json({success:true,data:message})
+})
+
+export const removeMesseages=catchAsync(async(req,res,next)=>{
+    const {messageId}=req.params
+    const message=await Message.findById(messageId).populate('chatId')
+    if(!message){
+        return next(new HandleERROR('message not found',404))
+    }
+    if(message.senderId.toString()!==req.userId){
+        return next(new HandleERROR('you are not authorized to update this message'))
+    }
+    await message.remove()
+    let members=message.chatId.members
+    const socketIds=getSocketId(members)
+    socketIds.forEach((socketId) => {
+        io.to(socketId).emit('remove_message',message)
+    });
+    return res.status(200).json({success:true,message:'message removed successfully'})
 })

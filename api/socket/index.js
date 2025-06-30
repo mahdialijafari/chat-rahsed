@@ -1,8 +1,8 @@
 import { Server } from "socket.io";
 import app from '../app.js'
-import {createServre} from 'http'
+import {createServer} from 'http'
 
-const server=createServre(app)
+const server=createServer(app)
 const io = new Server(server,{
     cors:'*'
 })

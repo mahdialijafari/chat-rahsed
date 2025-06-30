@@ -40,3 +40,6 @@ app.use((req,res,next)=>{
     return next(new HandleERROR('route not found',404))
 })
 app.use(catchError)
+
+
+export default app;
